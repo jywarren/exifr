@@ -2,6 +2,24 @@
 
 require 'rational'
 
+# Fixing pre-ruby 1.8.6 blockless each_slice() dependency
+# if you don't like where I've put this then move it
+if RUBY_VERSION < "1.8.7"
+  require 'enumerator'
+  module Enumerable
+    alias_method :original_each_slice, :each_slice
+    def each_slice(count, &block)
+      if block_given?
+        # call original method when used with block
+        original_each_slice(count, &block)
+      else
+        # no block -> emulate
+        self.enum_for(:original_each_slice, count)
+      end
+    end
+  end
+end
+
 module EXIFR
   # = TIFF decoder
   #
